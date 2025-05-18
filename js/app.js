@@ -75,7 +75,17 @@ function app() {
         
         // 保存资产数据到本地存储
         saveAssets() {
-            localStorage.setItem('assets', JSON.stringify(this.assets));
+            try {
+                localStorage.setItem('assets', JSON.stringify(this.assets));
+            } catch (e) {
+                console.error('保存失败:', e);
+                alert('保存失败，可能是因为数据过大。请尝试使用更小的图片。');
+                // 尝试移除最后添加的资产
+                if (e.name === 'QuotaExceededError' && this.assets.length > 0) {
+                    this.assets.pop();
+                    alert('已自动移除最后添加的资产，请尝试使用更小的图片。');
+                }
+            }
         },
         
         // 设置手势支持
@@ -217,13 +227,47 @@ function app() {
         handleImageUpload(event) {
             const file = event.target.files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    this.newAsset.image = e.target.result;
-                };
-                reader.readAsDataURL(file);
+                this.compressImage(file, 800, 600, 0.7);
             }
         },
+        
+        // 压缩图片
+        compressImage(file, maxWidth, maxHeight, quality) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    // 计算压缩后的尺寸
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > maxWidth) {
+                        height = Math.round(height * maxWidth / width);
+                        width = maxWidth;
+                    }
+                    
+                    if (height > maxHeight) {
+                        width = Math.round(width * maxHeight / height);
+                        height = maxHeight;
+                    }
+                    
+                    // 创建canvas进行压缩
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // 转换为base64
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+                    this.newAsset.image = compressedDataUrl;
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        },
+        
         
         // 获取当前资产
         get currentAsset() {
