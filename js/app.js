@@ -6,14 +6,15 @@ function app() {
         assets: [],
         currentAssetIndex: -1,
         showOptions: false,
+        isEditing: false,
+        editingAsset: {},
         
         // 新资产对象
         newAsset: {
             name: '',
             value: '',
             category: 'financial',
-            image: '',
-            purchaseDate: new Date().toISOString().split('T')[0]
+            image: ''
         },
         
         // 初始化
@@ -37,36 +38,31 @@ function app() {
                         name: 'iPhone15',
                         value: 5499,
                         category: 'valuable',
-                        image: '',
-                        purchaseDate: '2025-05-15'
+                        image: ''
                     },
                     {
                         name: 'Macbook M4',
                         value: 6000,
                         category: 'financial',
-                        image: '',
-                        purchaseDate: '2025-05-15'
+                        image: ''
                     },
                     {
                         name: '现金存款',
                         value: 2820000,
                         category: 'realestate',
-                        image: '',
-                        purchaseDate: '2025-05-15'
+                        image: ''
                     },
                     {
                         name: 'iPhone15',
                         value: 4000,
                         category: 'valuable',
-                        image: '',
-                        purchaseDate: '2025-05-15'
+                        image: ''
                     },
                     {
                         name: '天津房产',
                         value: 1020000,
                         category: 'realestate',
-                        image: '',
-                        purchaseDate: '2025-05-15'
+                        image: ''
                     }
                 ];
                 this.saveAssets();
@@ -120,19 +116,37 @@ function app() {
             if (isNaN(num)) return '¥0';
             
             if (num >= 10000) {
-                return `¥${(num / 10000).toFixed(2)}W`;
+                // 将数值转换为万单位
+                const inWan = num / 10000;
+                // 判断是否有小数部分
+                if (Math.floor(inWan) === inWan) {
+                    // 整数，不显示小数点
+                    return `¥${inWan}W`;
+                } else {
+                    // 有小数部分，保留两位小数
+                    // 先转换为两位小数的字符串
+                    const withTwoDecimals = inWan.toFixed(2);
+                    // 如果小数部分以零结尾，则去除
+                    const trimmed = withTwoDecimals.replace(/\.?0+$/, '');
+                    return `¥${trimmed}W`;
+                }
             } else {
-                return `¥${num}`;
+                // 判断是否有小数部分
+                if (Math.floor(num) === num) {
+                    // 整数，不显示小数点
+                    return `¥${num}`;
+                } else {
+                    // 有小数部分，保留两位小数
+                    // 先转换为两位小数的字符串
+                    const withTwoDecimals = num.toFixed(2);
+                    // 如果小数部分以零结尾，则去除
+                    const trimmed = withTwoDecimals.replace(/\.?0+$/, '');
+                    return `¥${trimmed}`;
+                }
             }
         },
         
-        // 格式化日期
-        formatDate(dateString) {
-            if (!dateString) return '';
-            
-            const date = new Date(dateString);
-            return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
-        },
+
         
         // 获取类别名称
         getCategoryName(category) {
@@ -176,8 +190,7 @@ function app() {
                 name: '',
                 value: '',
                 category: 'financial',
-                image: '',
-                purchaseDate: new Date().toISOString().split('T')[0]
+                image: ''
             };
         },
         
@@ -192,8 +205,7 @@ function app() {
                 name: this.newAsset.name,
                 value: Number(this.newAsset.value),
                 category: this.newAsset.category,
-                image: this.newAsset.image,
-                purchaseDate: this.newAsset.purchaseDate
+                image: this.newAsset.image
             });
             
             this.saveAssets();
@@ -206,6 +218,52 @@ function app() {
             this.currentAssetIndex = index;
             this.currentAsset = this.assets[index];
             this.currentPage = 'detail';
+            this.isEditing = false;
+        },
+        
+        // 开始编辑资产
+        startEditing() {
+            // 创建编辑资产的副本，避免直接修改原始资产
+            this.editingAsset = JSON.parse(JSON.stringify(this.currentAsset));
+            this.isEditing = true;
+        },
+        
+        // 保存编辑的资产
+        saveEditing() {
+            if (!this.editingAsset.name || !this.editingAsset.value) {
+                alert('请填写资产名称和价值');
+                return;
+            }
+            
+            // 更新当前资产
+            this.assets[this.currentAssetIndex] = {
+                name: this.editingAsset.name,
+                value: Number(this.editingAsset.value),
+                category: this.editingAsset.category,
+                image: this.editingAsset.image
+            };
+            
+            // 保存到本地存储
+            this.saveAssets();
+            
+            // 更新当前资产并退出编辑模式
+            this.currentAsset = this.assets[this.currentAssetIndex];
+            this.isEditing = false;
+        },
+        
+        // 触发编辑模式下的图片上传
+        triggerEditImageUpload() {
+            document.getElementById('editImageUpload').click();
+        },
+        
+        // 处理编辑模式下的图片上传
+        handleEditImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                this.compressImage(file, 800, 600, 0.7, (compressedDataUrl) => {
+                    this.editingAsset.image = compressedDataUrl;
+                });
+            }
         },
         
         // 删除资产
@@ -232,7 +290,7 @@ function app() {
         },
         
         // 压缩图片
-        compressImage(file, maxWidth, maxHeight, quality) {
+        compressImage(file, maxWidth, maxHeight, quality, callback) {
             const reader = new FileReader();
             reader.onload = (e) => {
                 const img = new Image();
@@ -261,7 +319,13 @@ function app() {
                     
                     // 转换为base64
                     const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-                    this.newAsset.image = compressedDataUrl;
+                    
+                    // 如果有回调函数，则调用回调函数
+                    if (callback) {
+                        callback(compressedDataUrl);
+                    } else {
+                        this.newAsset.image = compressedDataUrl;
+                    }
                 };
                 img.src = e.target.result;
             };

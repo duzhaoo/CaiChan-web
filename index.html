@@ -6,6 +6,8 @@
     <meta name="theme-color" content="#6366f1">
     <title>财产记录器</title>
     <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/caichan.png" type="image/png">
+    <link rel="apple-touch-icon" href="icons/caichan.png">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.0/dist/cdn.min.js" defer></script>
@@ -20,8 +22,8 @@
             <!-- 主页 -->
             <div x-show="currentPage === 'home'" class="h-full flex flex-col">
                 <!-- 顶部标题 -->
-                <div class="py-3 px-4 bg-white shadow-sm">
-                    <h1 class="text-center text-xl font-medium">财产记录器</h1>
+                <div class="py-3 px-4 ">
+                    <h1 class="text-center text-lg font-medium">财产记录器</h1>
                 </div>
                 
                 <!-- 总资产卡片 -->
@@ -54,9 +56,14 @@
             <!-- 添加资产页面 -->
             <div x-show="currentPage === 'add'" class="h-full flex flex-col">
                 <!-- 顶部标题 -->
-                <div class="py-3 px-4 bg-white shadow-sm flex items-center justify-between">
-                    <h1 class="text-center text-xl font-medium flex-1">添加资产</h1>
-                    <button @click="saveAsset" class="text-blue-500">保存</button>
+                <div class="py-3 px-4 ">
+                    <div class="flex items-center justify-between">
+                        <div class="w-16"></div> <!-- 左侧占位，保持标题居中 -->
+                        <h1 class="text-center text-lg font-medium flex-1">添加资产</h1>
+                        <button @click="saveAsset" class="text-blue-500 w-16 text-right">
+                            <i class="ri-check-line text-xl"></i>
+                        </button>
+                    </div>
                 </div>
                 
                 <!-- 表单 -->
@@ -92,51 +99,81 @@
                     </div>
                     
                     <!-- 图片上传 -->
-                    <div class="bg-gray-50 rounded-lg p-4 mb-4 flex flex-col items-center justify-center" @click="triggerImageUpload">
-                        <div x-show="!newAsset.image" class="w-full aspect-video flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg">
-                            <i class="ri-camera-line text-3xl text-gray-400 mb-2"></i>
-                            <p class="text-gray-400">上传图片</p>
+                    <div class="mb-4">
+                        <div class="flex">
+                            <div class="w-32 h-32 cursor-pointer" @click="triggerImageUpload">
+                                <div x-show="!newAsset.image" class="w-full h-full bg-gray-50 rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-gray-100 transition-colors">
+                                    <i class="ri-camera-line text-3xl text-gray-400"></i>
+                                    <p class="text-gray-400 text-sm mt-1">上传图片</p>
+                                </div>
+                                <div x-show="newAsset.image" class="w-full h-full rounded-lg overflow-hidden relative group">
+                                    <img :src="newAsset.image" class="w-full h-full object-cover">
+                                    <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                        <i class="ri-camera-line text-2xl text-white"></i>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <img x-show="newAsset.image" :src="newAsset.image" class="w-full rounded-lg">
                         <input type="file" id="imageUpload" class="hidden" @change="handleImageUpload">
                     </div>
                     
-                    <!-- 购买日期 -->
-                    <div class="bg-gray-50 rounded-lg p-4 mb-4">
-                        <input type="date" x-model="newAsset.purchaseDate" class="w-full bg-transparent outline-none">
-                    </div>
+
                 </div>
             </div>
             
             <!-- 资产详情页面 -->
             <div x-show="currentPage === 'detail'" class="h-full flex flex-col">
                 <!-- 顶部标题 -->
-                <div class="py-3 px-4 bg-white shadow-sm flex items-center">
-                    <button @click="currentPage = 'home'" class="mr-2">
-                        <i class="ri-arrow-left-s-line text-xl"></i>
-                    </button>
-                    <h1 class="text-center text-xl font-medium flex-1" x-text="currentAsset.name"></h1>
-                    <button @click="showOptions = true">
-                        <i class="ri-more-2-fill text-xl"></i>
-                    </button>
+                <div class="py-3 px-4 ">
+                    <div class="flex items-center justify-between">
+                        <button @click="currentPage = 'home'" class="w-16 text-left">
+                            <i class="ri-arrow-left-s-line text-xl"></i>
+                        </button>
+                        <h1 class="text-center text-lg font-medium flex-1" x-text="isEditing ? '编辑资产' : currentAsset.name"></h1>
+                        <button x-show="!isEditing" @click="startEditing()" class="w-16 text-right">
+                            <i class="ri-edit-line text-xl text-blue-500"></i>
+                        </button>
+                        <button x-show="isEditing" @click="saveEditing()" class="w-16 text-right">
+                            <i class="ri-check-line text-xl text-blue-500"></i>
+                        </button>
+                    </div>
                 </div>
                 
                 <!-- 资产图片 -->
-                <div class="w-full aspect-video bg-gray-200">
+                <div class="w-full aspect-video bg-gray-200" x-show="!isEditing">
                     <img x-show="currentAsset.image" :src="currentAsset.image" class="w-full h-full object-cover">
                     <div x-show="!currentAsset.image" class="w-full h-full flex items-center justify-center">
                         <i :class="getCategoryIcon(currentAsset.category)" class="text-5xl text-gray-400"></i>
                     </div>
                 </div>
                 
-                <!-- 资产价值 -->
-                <div class="p-4 bg-white">
+                <!-- 编辑模式下的图片上传 -->
+                <div class="p-4" x-show="isEditing">
+                    <div class="flex">
+                        <div class="w-32 h-32 cursor-pointer" @click="triggerEditImageUpload">
+                            <div x-show="!editingAsset.image" class="w-full h-full bg-gray-50 rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-gray-100 transition-colors">
+                                <i class="ri-camera-line text-3xl text-gray-400"></i>
+                                <p class="text-gray-400 text-sm mt-1">上传图片</p>
+                            </div>
+                            <div x-show="editingAsset.image" class="w-full h-full rounded-lg overflow-hidden relative group">
+                                <img :src="editingAsset.image" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                    <i class="ri-camera-line text-2xl text-white"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="file" id="editImageUpload" class="hidden" @change="handleEditImageUpload">
+                </div>
+                
+                <!-- 资产价值 - 查看模式 -->
+                <div class="p-4 bg-white" x-show="!isEditing">
                     <h2 class="text-sm text-gray-500 mb-1">资产价值</h2>
                     <p class="text-3xl font-bold" x-text="formatCurrency(currentAsset.value)"></p>
                 </div>
                 
-                <!-- 资产信息 -->
-                <div class="p-4 bg-white mt-3">
+                <!-- 资产信息 - 查看模式 -->
+                <div class="p-4 bg-white mt-3" x-show="!isEditing">
                     <div class="flex justify-between py-3 border-b">
                         <span class="text-gray-500">名称</span>
                         <span x-text="currentAsset.name"></span>
@@ -146,8 +183,42 @@
                         <span x-text="getCategoryName(currentAsset.category)"></span>
                     </div>
                     <div class="flex justify-between py-3">
-                        <span class="text-gray-500">购买日期</span>
-                        <span x-text="formatDate(currentAsset.purchaseDate)"></span>
+                        <button @click="showOptions = true" class="w-full py-2 text-center text-red-500 border border-red-500 rounded-lg">
+                            <i class="ri-delete-bin-line mr-1"></i> 删除资产
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 资产信息 - 编辑模式 -->
+                <div class="p-4" x-show="isEditing">
+                    <!-- 资产名称 -->
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                        <input type="text" x-model="editingAsset.name" placeholder="输入资产名称" class="w-full bg-transparent outline-none">
+                    </div>
+                    
+                    <!-- 资产价值 -->
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                        <input type="number" x-model="editingAsset.value" placeholder="资产价值" class="w-full bg-transparent outline-none">
+                    </div>
+                    
+                    <!-- 资产类别选择 -->
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <button @click="editingAsset.category = 'financial'" class="py-3 rounded-lg flex flex-col items-center justify-center" :class="editingAsset.category === 'financial' ? 'bg-yellow-500 text-white' : 'bg-gray-50'">
+                            <i class="ri-money-cny-box-line text-2xl mb-1"></i>
+                            <span>金融资产</span>
+                        </button>
+                        <button @click="editingAsset.category = 'realestate'" class="py-3 rounded-lg flex flex-col items-center justify-center" :class="editingAsset.category === 'realestate' ? 'bg-blue-500 text-white' : 'bg-gray-50'">
+                            <i class="ri-home-line text-2xl mb-1"></i>
+                            <span>不动产</span>
+                        </button>
+                        <button @click="editingAsset.category = 'valuable'" class="py-3 rounded-lg flex flex-col items-center justify-center" :class="editingAsset.category === 'valuable' ? 'bg-purple-500 text-white' : 'bg-gray-50'">
+                            <i class="ri-gift-line text-2xl mb-1"></i>
+                            <span>贵重物品</span>
+                        </button>
+                        <button @click="editingAsset.category = 'other'" class="py-3 rounded-lg flex flex-col items-center justify-center" :class="editingAsset.category === 'other' ? 'bg-gray-500 text-white' : 'bg-gray-50'">
+                            <i class="ri-box-3-line text-2xl mb-1"></i>
+                            <span>其他</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -155,8 +226,8 @@
             <!-- 设置页面 -->
             <div x-show="currentPage === 'settings'" class="h-full flex flex-col">
                 <!-- 顶部标题 -->
-                <div class="py-3 px-4 bg-white shadow-sm">
-                    <h1 class="text-center text-xl font-medium">设置</h1>
+                <div class="py-3 px-4 ">
+                    <h1 class="text-center text-lg font-medium">设置</h1>
                 </div>
                 
                 <!-- 设置选项 -->
