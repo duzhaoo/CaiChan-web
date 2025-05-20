@@ -7,9 +7,10 @@
     "lang": "zh-CN",
     "short_name": "财产记录器",
     "description": "一款简单实用的家庭资产管理工具",
-    "start_url": "./index.html",
+    "start_url": "./",
     "scope": "./",
     "display": "standalone",
+    "id": "caichan-app",
     "background_color": "#ffffff",
     "theme_color": "#6366f1",
     "shortcuts": [

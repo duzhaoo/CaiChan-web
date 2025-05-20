@@ -296,6 +296,22 @@
                     });
             });
         }
+        
+        // 处理PWA安装事件
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // 阻止Chrome 76及以下版本自动显示安装提示
+            e.preventDefault();
+            // 保存安装事件以便稍后触发
+            deferredPrompt = e;
+            console.log('应用可以安装');
+        });
+        
+        // 安装成功事件
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('应用已成功安装');
+        });
     </script>
 </body>
 </html>
