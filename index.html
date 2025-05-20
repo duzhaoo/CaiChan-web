@@ -229,8 +229,15 @@
             <!-- 设置页面 -->
             <div x-show="currentPage === 'settings'" class="h-full flex flex-col">
                 <!-- 顶部标题 -->
-                <div class="py-3 px-4 ">
+                <div class="py-3 px-4">
                     <h1 class="text-center text-lg font-medium">设置</h1>
+                </div>
+                
+                <!-- 安装 PWA 按钮 -->
+                <div class="p-4" id="pwaInstallContainer" style="display: none;">
+                    <button id="pwaInstallBtn" class="w-full py-3 bg-indigo-500 text-white rounded-lg flex items-center justify-center">
+                        <i class="ri-download-line mr-2"></i> 将应用安装到桌面
+                    </button>
                 </div>
                 
                 <!-- 设置选项 -->
@@ -306,11 +313,42 @@
             // 保存安装事件以便稍后触发
             deferredPrompt = e;
             console.log('应用可以安装');
+            
+            // 显示安装按钮
+            const pwaInstallContainer = document.getElementById('pwaInstallContainer');
+            if (pwaInstallContainer) {
+                pwaInstallContainer.style.display = 'block';
+            }
         });
         
         // 安装成功事件
         window.addEventListener('appinstalled', (evt) => {
             console.log('应用已成功安装');
+            // 隐藏安装按钮
+            const pwaInstallContainer = document.getElementById('pwaInstallContainer');
+            if (pwaInstallContainer) {
+                pwaInstallContainer.style.display = 'none';
+            }
+            deferredPrompt = null;
+        });
+        
+        // 添加安装按钮点击事件
+        document.addEventListener('DOMContentLoaded', () => {
+            const pwaInstallBtn = document.getElementById('pwaInstallBtn');
+            if (pwaInstallBtn) {
+                pwaInstallBtn.addEventListener('click', async () => {
+                    if (!deferredPrompt) {
+                        return;
+                    }
+                    // 显示安装提示
+                    deferredPrompt.prompt();
+                    // 等待用户响应
+                    const { outcome } = await deferredPrompt.userChoice;
+                    console.log(`用户选择: ${outcome}`);
+                    // 清除安装事件
+                    deferredPrompt = null;
+                });
+            }
         });
     </script>
 </body>

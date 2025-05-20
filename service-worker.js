@@ -5,6 +5,7 @@ const CACHE_NAME = 'caichan-cache-v1';
 const CACHE_ASSETS = [
     './',
     './index.html',
+    'index.html',
     './css/style.css',
     './js/app.js',
     './manifest.json',
