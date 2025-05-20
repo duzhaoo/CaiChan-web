@@ -1,11 +1,26 @@
 {
     "name": "财产记录器",
+    "orientation": "portrait",
+    "prefer_related_applications": false,
+    "related_applications": [],
+    "categories": ["finance", "utilities"],
+    "lang": "zh-CN",
     "short_name": "财产记录器",
     "description": "一款简单实用的家庭资产管理工具",
-    "start_url": "/",
+    "start_url": "./index.html",
+    "scope": "./",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#6366f1",
+    "shortcuts": [
+        {
+            "name": "添加资产",
+            "short_name": "添加",
+            "description": "添加新资产",
+            "url": "./index.html?page=add",
+            "icons": [{ "src": "icons/icon192.png", "sizes": "192x192" }]
+        }
+    ],
     "icons": [
         {
             "src": "icons/caichan.png",
@@ -21,7 +36,7 @@
             "src": "icons/icon512.png",
             "sizes": "512x512",
             "type": "image/png",
-            "purpose": "any"
+            "purpose": "any maskable"
         }
     ]
 }

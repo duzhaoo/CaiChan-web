@@ -24,6 +24,13 @@ function app() {
             
             // 设置手势支持
             this.setupHammer();
+            
+            // 处理 URL 参数，支持快捷方式功能
+            const urlParams = new URLSearchParams(window.location.search);
+            const page = urlParams.get('page');
+            if (page) {
+                this.currentPage = page;
+            }
         },
         
         // 加载资产数据
